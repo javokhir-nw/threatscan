@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ThreatScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0b0e;--bg2:#0f1117;--bg3:#151820;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#e8eaf0;--text2:#7a7f8e;--text3:#4a4f5c;--red:#ff3b5c;--red-bg:rgba(255,59,92,0.08);--red-border:rgba(255,59,92,0.2);--yellow:#ffb443;--yellow-bg:rgba(255,180,67,0.08);--yellow-border:rgba(255,180,67,0.2);--green:#00d68f;--green-bg:rgba(0,214,143,0.08);--green-border:rgba(0,214,143,0.2);--blue:#4d9fff;--blue-bg:rgba(77,159,255,0.08);--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,59,92,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,59,92,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+.container{max-width:980px;margin:0 auto;padding:0 24px 80px;position:relative;z-index:1}
+header{padding:36px 0 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{width:42px;height:42px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.brand-icon svg{width:22px;height:22px;stroke:var(--red);fill:none;stroke-width:1.8}
+.brand-name{font-family:var(--sans);font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.brand-name span{color:var(--red)}
+.brand-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:1.2px;text-transform:uppercase}
+.live{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Proxy config */
+.proxy-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.proxy-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.proxy-box input{flex:1;min-width:180px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .2s}
+.proxy-box input:focus{border-color:var(--border2)}
+.proxy-hint{font-size:10px;color:var(--text3);width:100%;margin-top:2px}
+
+/* API key */
+.api-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.api-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.api-box input{flex:1;min-width:180px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .2s}
+.api-box input:focus{border-color:var(--border2)}
+.btn-sm{background:transparent;border:1px solid var(--border2);border-radius:8px;padding:8px 16px;color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-sm:hover{background:var(--bg3);border-color:var(--text3)}
+.saved{font-size:11px;color:var(--green);display:none}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:18px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px}
+.tab{flex:1;padding:10px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;border:none;background:transparent;border-radius:7px;transition:all .2s;letter-spacing:.5px}
+.tab.active{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.tab:hover:not(.active){color:var(--text)}
+.panel{display:none}.panel.active{display:block}
+
+/* Input */
+.input-wrap{display:flex;gap:10px;margin-bottom:16px}
+.main-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 18px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:border-color .2s}
+.main-input:focus{border-color:var(--red-border)}
+.main-input::placeholder{color:var(--text3)}
+.btn-scan{background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:13px 26px;color:var(--red);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;font-weight:500}
+.btn-scan:hover{background:rgba(255,59,92,.15)}
+.btn-scan:active{transform:scale(.98)}
+.btn-scan:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.input-hint{font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:14px}
+
+/* Drop */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:12px;padding:44px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--red-border);background:var(--red-bg)}
+.drop-zone svg{width:32px;height:32px;stroke:var(--text3);margin:0 auto 12px;display:block;transition:stroke .2s}
+.drop-zone:hover svg{stroke:var(--red)}
+.drop-zone h3{font-family:var(--sans);font-size:15px;font-weight:600;margin-bottom:5px}
+.drop-zone p{font-size:12px;color:var(--text2)}
+.file-info{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 18px;margin-bottom:14px;align-items:center;gap:12px}
+.file-info.show{display:flex}
+.file-name{flex:1;font-size:13px}
+.file-size{font-size:11px;color:var(--text2)}
+
+/* Scanning */
+.scanning{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px;align-items:center;gap:14px}
+.scanning.show{display:flex}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-text{font-size:13px;color:var(--text2)}
+.scan-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.scan-timer{margin-left:auto;font-size:12px;color:var(--red);font-weight:500}
+
+/* Results */
+#results{display:none;animation:fadeIn .3s ease}
+#results.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.verdict{border-radius:14px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.verdict.clean{background:var(--green-bg);border:1px solid var(--green-border)}
+.verdict.malicious{background:var(--red-bg);border:1px solid var(--red-border)}
+.verdict.suspicious{background:var(--yellow-bg);border:1px solid var(--yellow-border)}
+.verdict.unknown{background:var(--bg2);border:1px solid var(--border)}
+.v-icon{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.verdict.clean .v-icon{background:rgba(0,214,143,.15)}
+.verdict.malicious .v-icon{background:rgba(255,59,92,.15)}
+.verdict.suspicious .v-icon{background:rgba(255,180,67,.15)}
+.v-body{flex:1}
+.v-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.verdict.clean .v-label{color:var(--green)}
+.verdict.malicious .v-label{color:var(--red)}
+.verdict.suspicious .v-label{color:var(--yellow)}
+.verdict.unknown .v-label{color:var(--text3)}
+.v-title{font-family:var(--sans);font-size:21px;font-weight:700}
+.verdict.clean .v-title{color:var(--green)}
+.verdict.malicious .v-title{color:var(--red)}
+.verdict.suspicious .v-title{color:var(--yellow)}
+.v-desc{font-size:12px;color:var(--text2);margin-top:4px}
+.v-risk{text-align:right}
+.v-pct{font-family:var(--sans);font-size:34px;font-weight:700;line-height:1}
+.verdict.clean .v-pct{color:var(--green)}
+.verdict.malicious .v-pct{color:var(--red)}
+.verdict.suspicious .v-pct{color:var(--yellow)}
+.v-pct-label{font-size:10px;color:var(--text3);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.stat-n{font-family:var(--sans);font-size:26px;font-weight:700;line-height:1;margin-bottom:5px}
+.stat-n.r{color:var(--red)}.stat-n.y{color:var(--yellow)}.stat-n.g{color:var(--green)}
+.stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+
+.risk-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.risk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sec-title{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+.risk-val-txt{font-size:12px;font-weight:500}
+.bar-bg{height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:7px}
+.bar-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--text3)}
+
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.cat{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid}
+.cat.danger{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.cat.warn{background:var(--yellow-bg);border-color:var(--yellow-border);color:var(--yellow)}
+.cat.info{background:var(--blue-bg);border-color:rgba(77,159,255,.2);color:var(--blue)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-head{padding:11px 16px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.meta-list{padding:10px 14px}
+.meta-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:10px}
+.meta-row:last-child{border-bottom:none}
+.mk{font-size:11px;color:var(--text2);flex-shrink:0}
+.mv{font-size:11px;text-align:right;word-break:break-all}
+
+.engines-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.engines-grid{display:grid;grid-template-columns:repeat(2,1fr);max-height:300px;overflow-y:auto;padding:8px;gap:3px}
+.engines-grid::-webkit-scrollbar{width:4px}
+.engines-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.eng-row{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-radius:6px;gap:8px;transition:background .15s}
+.eng-row:hover{background:var(--bg3)}
+.eng-row.bad-bg{background:rgba(255,59,92,.05)}
+.eng-row.bad-bg:hover{background:rgba(255,59,92,.1)}
+.eng-name{font-size:11px;color:var(--text2)}
+.eng-res{font-size:11px;font-weight:500;text-align:right}
+.eng-res.bad{color:var(--red)}.eng-res.sus{color:var(--yellow)}.eng-res.ok{color:var(--text3)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-act{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s}
+.btn-act:hover{border-color:var(--border2);color:var(--text);background:var(--bg3)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;font-size:12px;color:var(--text);z-index:100;transform:translateY(16px);opacity:0;transition:all .25s}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .engines-grid{grid-template-columns:1fr}
+  .v-risk{width:100%;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Threat<span>Scan</span> Pro</div>
+        <div class="brand-sub">Kiberxavfsizlik Tahlil Tizimi</div>
+      </div>
+    </div>
+    <div class="live"><div class="dot"></div>VirusTotal API v3 · 70+ Engine</div>
+  </header>
+
+  <!-- Proxy URL -->
+  <div class="proxy-box">
+    <span class="proxy-label">Proxy URL</span>
+    <input type="text" id="proxyUrl" placeholder="https://YOUR-WORKER.YOUR-NAME.workers.dev"/>
+    <button class="btn-sm" onclick="saveProxy()">Saqlash</button>
+    <span class="saved" id="proxySaved">✓ Saqlandi</span>
+    <div class="proxy-hint">Cloudflare Worker URL — quyidagi README'dan oling</div>
+  </div>
+
+  <!-- API Key -->
+  <div class="api-box">
+    <span class="api-label">VT API Key</span>
+    <input type="password" id="apiKey" placeholder="VirusTotal API kaliti — virustotal.com/gui/sign-in (bepul)"/>
+    <button class="btn-sm" onclick="saveKey()">Saqlash</button>
+    <span class="saved" id="apiSaved">✓ Saqlandi</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('url',this)">// URL Tahlil</button>
+    <button class="tab" onclick="switchTab('file',this)">// Fayl Skanerlash</button>
+    <button class="tab" onclick="switchTab('hash',this)">// Hash Qidirish</button>
+  </div>
+
+  <!-- URL -->
+  <div class="panel active" id="tab-url">
+    <div class="input-wrap">
+      <input class="main-input" type="text" id="urlInput" placeholder="https://shubhali-sayt.com yoki har qanday URL..."/>
+      <button class="btn-scan" onclick="scanUrl()">SKANERLASH →</button>
+    </div>
+    <div class="input-hint">HTTP/HTTPS · IP manzillar · Qisqartilgan linklar</div>
+  </div>
+
+  <!-- File -->
+  <div class="panel" id="tab-file">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <h3>Fayl yuklang</h3>
+      <p>Bosing yoki drag & drop · Maks 32MB</p>
+      <p style="font-size:11px;color:var(--text3);margin-top:5px">.exe .dll .pdf .docx .zip .apk — har qanday format</p>
+      <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)"/>
+    </div>
+    <div class="file-info" id="fileInfo">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="file-name" id="fileNameTxt">—</span>
+      <span class="file-size" id="fileSizeTxt">—</span>
+      <button class="btn-scan" onclick="scanFile()">SKANERLASH →</button>
+    </div>
+  </div>
+
+  <!-- Hash -->
+  <div class="panel" id="tab-hash">
+    <div class="input-wrap">
+      <input class="main-input" type="text" id="hashInput" placeholder="MD5 · SHA1 · SHA256 hash kiriting..."/>
+      <button class="btn-scan" onclick="scanHash()">QIDIRISH →</button>
+    </div>
+    <div class="input-hint">32 (MD5) · 40 (SHA1) · 64 (SHA256) belgi</div>
+  </div>
+
+  <!-- Scanning -->
+  <div class="scanning" id="scanBar">
+    <div class="spinner"></div>
+    <div>
+      <div class="scan-text" id="scanTxt">Tekshirilmoqda...</div>
+      <div class="scan-sub" id="scanSub">70+ antivirus engine ishlamoqda</div>
+    </div>
+    <div class="scan-timer" id="scanTimer"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="verdict unknown" id="verdictBox">
+      <div class="v-icon" id="vIcon">?</div>
+      <div class="v-body">
+        <div class="v-label" id="vLabel">NATIJA</div>
+        <div class="v-title" id="vTitle">—</div>
+        <div class="v-desc" id="vDesc">—</div>
+      </div>
+      <div class="v-risk">
+        <div class="v-pct" id="vPct">—</div>
+        <div class="v-pct-label">Xavf darajasi</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n r" id="sMal">—</div><div class="stat-l">Xavfli</div></div>
+      <div class="stat"><div class="stat-n y" id="sSus">—</div><div class="stat-l">Shubhali</div></div>
+      <div class="stat"><div class="stat-n g" id="sClean">—</div><div class="stat-l">Xavfsiz</div></div>
+      <div class="stat"><div class="stat-n" id="sTotal" style="color:var(--text)">—</div><div class="stat-l">Jami engine</div></div>
+    </div>
+
+    <div class="risk-card">
+      <div class="risk-head">
+        <span class="sec-title">Xavf Darajasi</span>
+        <span class="risk-val-txt" id="riskTxt">—</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+      <div class="bar-lbl"><span>Xavfsiz</span><span>O'rta</span><span>Xavfli</span></div>
+    </div>
+
+    <div id="catSection" style="display:none;margin-bottom:18px">
+      <div class="sec-title" style="margin-bottom:8px">Tahdid Kategoriyalari</div>
+      <div class="cats" id="catsBox"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">// Asosiy Ma'lumotlar</div>
+        <div class="meta-list" id="metaList"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">// Texnik Tafsilotlar</div>
+        <div class="meta-list" id="techList"></div>
+      </div>
+    </div>
+
+    <div class="engines-card">
+      <div class="card-head" style="padding:12px 18px">
+        // Antivirus Engine Natijalari
+        <span id="engCount" style="float:right;color:var(--text2)"></span>
+      </div>
+      <div class="engines-grid" id="engGrid"></div>
+    </div>
+
+    <div class="sec-title" style="margin-bottom:10px">Amallar</div>
+    <div class="actions">
+      <button class="btn-act" onclick="copyReport()">Hisobotni nusxalash</button>
+      <button class="btn-act" onclick="dlJSON()">JSON yuklash</button>
+      <button class="btn-act" onclick="dlHTML()">HTML hisobot</button>
+      <button class="btn-act" onclick="newScan()">Yangi skan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let _key='', _proxy='', _file=null, _data=null;
+
+window.onload=()=>{
+  _key=localStorage.getItem('vt_key')||'';
+  _proxy=localStorage.getItem('vt_proxy')||'';
+  if(_key){document.getElementById('apiKey').value=_key;document.getElementById('apiSaved').style.display='inline'}
+  if(_proxy){document.getElementById('proxyUrl').value=_proxy;document.getElementById('proxySaved').style.display='inline'}
+  setupDrop();
+};
+
+function saveKey(){
+  _key=document.getElementById('apiKey').value.trim();
+  if(_key){localStorage.setItem('vt_key',_key);document.getElementById('apiSaved').style.display='inline';toast('API kaliti saqlandi')}
+}
+
+function saveProxy(){
+  _proxy=document.getElementById('proxyUrl').value.trim().replace(/\/$/,'');
+  if(_proxy){localStorage.setItem('vt_proxy',_proxy);document.getElementById('proxySaved').style.display='inline';toast('Proxy URL saqlandi')}
+}
+
+function getProxy(){return _proxy||document.getElementById('proxyUrl').value.trim().replace(/\/$/,'')}
+function getKey(){return _key||document.getElementById('apiKey').value.trim()}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  hideAll();
+}
+
+function toast(msg,dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function showScan(txt,sub=''){
+  document.getElementById('scanBar').classList.add('show');
+  document.getElementById('scanTxt').textContent=txt;
+  document.getElementById('scanSub').textContent=sub;
+  document.getElementById('results').style.display='none';
+  document.getElementById('results').classList.remove('show');
+}
+
+function hideAll(){
+  document.getElementById('scanBar').classList.remove('show');
+  document.getElementById('results').style.display='none';
+}
+
+function newScan(){
+  hideAll();
+  document.getElementById('urlInput').value='';
+  document.getElementById('hashInput').value='';
+  _file=null;
+  document.getElementById('fileInfo').classList.remove('show');
+}
+
+let _timerInt=null;
+function startTimer(){
+  let s=0;
+  _timerInt=setInterval(()=>{
+    s++;
+    document.getElementById('scanTimer').textContent=s+'s';
+  },1000);
+}
+function stopTimer(){clearInterval(_timerInt);document.getElementById('scanTimer').textContent=''}
+
+async function vtFetch(path,opts={}){
+  const key=getKey();
+  if(!key){toast('⚠ API kalitini kiriting!');throw new Error('no key')}
+  const res=await fetch('/api/vt'+path,{...opts,headers:{'x-apikey':key,...(opts.headers||{})}});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+res.status)}
+  return res.json();
+}
+
+async function poll(id){
+  for(let i=0;i<24;i++){
+    await sleep(3000);
+    const d=await vtFetch('/analyses/'+id);
+    if(d.data.attributes.status==='completed')return d;
+  }
+  throw new Error('Vaqt tugadi (72s)');
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function scanUrl(){
+  const url=document.getElementById('urlInput').value.trim();
+  if(!url){toast('URL kiriting');return}
+  showScan('URL yuborilmoqda...','so\'rov tayyorlanmoqda');startTimer();
+  try{
+    const form=new URLSearchParams();form.append('url',url);
+    const sub=await vtFetch('/urls',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form.toString()});
+    document.getElementById('scanTxt').textContent='Skanerlanmoqda...';
+    document.getElementById('scanSub').textContent='70+ antivirus engine tekshirmoqda';
+    const res=await poll(sub.data.id);
+    const uid=btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const det=await vtFetch('/urls/'+uid).catch(()=>null);
+    stopTimer();render(res.data.attributes,det?.data?.attributes,{type:'url',value:url});
+  }catch(e){stopTimer();hideAll();toast('Xato: '+e.message,4000)}
+}
+
+async function scanHash(){
+  const h=document.getElementById('hashInput').value.trim();
+  if(!h){toast('Hash kiriting');return}
+  showScan('Hash qidirilmoqda...');startTimer();
+  try{
+    const d=await vtFetch('/files/'+h);
+    stopTimer();render(d.data.attributes,d.data.attributes,{type:'hash',value:h});
+  }catch(e){stopTimer();hideAll();toast('Xato: '+e.message,4000)}
+}
+
+function setupDrop(){
+  const dz=document.getElementById('dropZone');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)setFile(f)});
+}
+
+function handleFile(i){if(i.files[0])setFile(i.files[0])}
+
+function setFile(f){
+  _file=f;
+  document.getElementById('fileNameTxt').textContent=f.name;
+  document.getElementById('fileSizeTxt').textContent=fmtSize(f.size);
+  document.getElementById('fileInfo').classList.add('show');
+}
+
+function fmtSize(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
+
+async function scanFile(){
+  if(!_file)return;
+  if(_file.size>32*1024*1024){toast('Maks 32MB');return}
+  showScan('Fayl yuklanmoqda...',_file.name);startTimer();
+  try{
+    const fd=new FormData();fd.append('file',_file);
+    const sub=await vtFetch('/files',{method:'POST',body:fd});
+    document.getElementById('scanTxt').textContent='Skanerlanmoqda...';
+    const res=await poll(sub.data.id);
+    stopTimer();render(res.data.attributes,null,{type:'file',value:_file.name});
+  }catch(e){stopTimer();hideAll();toast('Xato: '+e.message,4000)}
+}
+
+function render(attrs,details,meta){
+  _data={attrs,details,meta,ts:new Date().toISOString()};
+  const s=attrs.stats||{};
+  const mal=s.malicious||0,sus=s.suspicious||0,undet=s.undetected||0;
+  const total=Object.values(s).reduce((a,b)=>a+b,0);
+  const risk=Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+
+  document.getElementById('sMal').textContent=mal;
+  document.getElementById('sSus').textContent=sus;
+  document.getElementById('sClean').textContent=undet;
+  document.getElementById('sTotal').textContent=total;
+
+  const vBox=document.getElementById('verdictBox');
+  let vc,vl,vt,vd,vi;
+  if(mal>=10){vc='malicious';vl='XAVFLI TAHDID';vt='Zararli Dastur Aniqlandi';vd=mal+' ta engine tahdid topdi';vi='✕'}
+  else if(mal>0||sus>5){vc='malicious';vl='XAVFLI';vt='Tahdid Aniqlandi';vd=mal+' malicious, '+sus+' suspicious';vi='!'}
+  else if(sus>0){vc='suspicious';vl='SHUBHALI';vt='Shubhali Faoliyat';vd=sus+' ta engine shubhali dedi';vi='⚠'}
+  else if(total>0){vc='clean';vl='XAVFSIZ';vt='Tahdid Topilmadi';vd=total+' ta engine — barchasi xavfsiz';vi='✓'}
+  else{vc='unknown';vl='NOANIQ';vt='Ma\'lumot Yetarli Emas';vd='Tahlil qilinmagan';vi='?'}
+
+  vBox.className='verdict '+vc;
+  document.getElementById('vLabel').textContent=vl;
+  document.getElementById('vTitle').textContent=vt;
+  document.getElementById('vDesc').textContent=vd;
+  document.getElementById('vIcon').textContent=vi;
+  document.getElementById('vPct').textContent=risk+'%';
+
+  const bf=document.getElementById('barFill');
+  bf.style.width=risk+'%';
+  bf.style.background=risk>60?'var(--red)':risk>20?'var(--yellow)':'var(--green)';
+  document.getElementById('riskTxt').textContent=risk+'% — '+(risk>60?'Yuqori xavf':risk>20?'O\'rta xavf':'Quyi xavf');
+
+  const cats={...(attrs.categories||{}),...(details?.categories||{})};
+  const catArr=[...new Set(Object.values(cats))].slice(0,12);
+  if(catArr.length){
+    document.getElementById('catSection').style.display='block';
+    const dw=['malware','phish','malicious','spam','exploit','trojan','ransomware','backdoor'];
+    const ww=['suspicious','adware','pua','greyware','riskware'];
+    document.getElementById('catsBox').innerHTML=catArr.map(c=>{
+      const cl=dw.some(w=>c.toLowerCase().includes(w))?'danger':ww.some(w=>c.toLowerCase().includes(w))?'warn':'info';
+      return`<span class="cat ${cl}">${c}</span>`;
+    }).join('');
+  }else{document.getElementById('catSection').style.display='none'}
+
+  const mi=[];
+  if(meta.value)mi.push(['Maqsad',meta.value.length>55?meta.value.slice(0,55)+'…':meta.value]);
+  mi.push(['Tur',meta.type.toUpperCase()]);
+  if(attrs.last_analysis_date)mi.push(['Oxirgi skan',new Date(attrs.last_analysis_date*1000).toLocaleDateString('uz-UZ')]);
+  if(attrs.times_submitted)mi.push(['Yuborilgan',attrs.times_submitted+' marta']);
+  if(attrs.reputation!==undefined)mi.push(['Reputatsiya',(attrs.reputation>0?'+':'')+attrs.reputation]);
+  if(attrs.tld)mi.push(['TLD','.'+attrs.tld]);
+  if(attrs.country)mi.push(['Mamlakat',attrs.country]);
+  document.getElementById('metaList').innerHTML=mi.map(([k,v])=>`<div class="meta-row"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join('');
+
+  const ti=[];
+  if(attrs.sha256)ti.push(['SHA256',attrs.sha256.slice(0,16)+'…']);
+  if(attrs.md5)ti.push(['MD5',attrs.md5]);
+  if(attrs.size)ti.push(['Hajm',fmtSize(attrs.size)]);
+  if(attrs.type_description)ti.push(['Fayl turi',attrs.type_description]);
+  if(attrs.magic)ti.push(['Magic',attrs.magic.slice(0,28)]);
+  document.getElementById('techList').innerHTML=ti.length?ti.map(([k,v])=>`<div class="meta-row"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join(''):'<div style="padding:14px;font-size:11px;color:var(--text3)">Texnik ma\'lumot yo\'q</div>';
+
+  const res=attrs.results||{};
+  const engs=Object.entries(res).sort((a,b)=>{const r=x=>x.category==='malicious'?0:x.category==='suspicious'?1:2;return r(a[1])-r(b[1])});
+  document.getElementById('engCount').textContent=engs.length+' engine';
+  document.getElementById('engGrid').innerHTML=engs.map(([e,r])=>{
+    const bad=r.category==='malicious',sus2=r.category==='suspicious';
+    const label=r.result||(r.category==='undetected'?'Aniqlanmadi':r.category||'—');
+    return`<div class="eng-row ${bad?'bad-bg':''}"><span class="eng-name">${e}</span><span class="eng-res ${bad?'bad':sus2?'sus':'ok'}">${label}</span></div>`;
+  }).join('');
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function copyReport(){
+  if(!_data)return;
+  const s=_data.attrs.stats||{};
+  const mal=s.malicious||0,sus=s.suspicious||0,total=Object.values(s).reduce((a,b)=>a+b,0);
+  const risk=Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+  navigator.clipboard.writeText([
+    '=== ThreatScan Pro Hisobot ===',
+    'Sana: '+new Date().toLocaleString('uz-UZ'),
+    'Maqsad: '+_data.meta.value,
+    'Xavfli: '+mal+' | Shubhali: '+sus+' | Jami: '+total,
+    'Xavf darajasi: '+risk+'%',
+    mal>0?'NATIJA: XAVFLI':sus>0?'NATIJA: SHUBHALI':'NATIJA: XAVFSIZ'
+  ].join('\n')).then(()=>toast('✓ Nusxalandi'));
+}
+
+function dlJSON(){
+  if(!_data)return;
+  dl(new Blob([JSON.stringify(_data,null,2)],{type:'application/json'}),'threatscan-'+Date.now()+'.json');
+}
+
+function dlHTML(){
+  if(!_data)return;
+  const s=_data.attrs.stats||{};
+  const mal=s.malicious||0,sus=s.suspicious||0,total=Object.values(s).reduce((a,b)=>a+b,0);
+  const risk=Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+  const engs=Object.entries(_data.attrs.results||{}).sort((a,b)=>{const r=x=>x.category==='malicious'?0:1;return r(a[1])-r(b[1])}).slice(0,60);
+  const color=mal>0?'#ff3b5c':sus>0?'#ffb443':'#00d68f';
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ThreatScan Report — ${_data.meta.value}</title></head>
+<body style="background:#0a0b0e;color:#e8eaf0;font-family:monospace;padding:40px;max-width:820px;margin:auto">
+<h1 style="color:#ff3b5c;margin:0 0 4px;font-family:sans-serif">ThreatScan Pro</h1>
+<p style="color:#555;font-size:12px;margin:0 0 28px">${new Date(_data.ts).toLocaleString()} · ${_data.meta.value}</p>
+<div style="background:#0f1117;border:1px solid #222;border-radius:12px;padding:22px;margin-bottom:22px">
+  <div style="font-size:26px;font-weight:700;color:${color};margin-bottom:8px">${mal>0?'XAVFLI':sus>0?'SHUBHALI':'XAVFSIZ'} · Xavf: ${risk}%</div>
+  <div style="color:#888;font-size:13px">Xavfli: ${mal} · Shubhali: ${sus} · Xavfsiz: ${s.undetected||0} · Jami: ${total}</div>
+</div>
+<table style="width:100%;border-collapse:collapse">
+  <tr style="background:#151820"><th style="padding:9px 12px;text-align:left;font-size:10px;color:#555;letter-spacing:1px">ENGINE</th><th style="padding:9px 12px;text-align:left;font-size:10px;color:#555;letter-spacing:1px">NATIJA</th></tr>
+  ${engs.map(([e,r])=>`<tr style="border-bottom:1px solid #1a1a1a"><td style="padding:6px 12px;font-size:12px;color:#888">${e}</td><td style="padding:6px 12px;font-size:12px;color:${r.category==='malicious'?'#ff3b5c':r.category==='suspicious'?'#ffb443':'#444'};font-weight:500">${r.result||r.category||'—'}</td></tr>`).join('')}
+</table></body></html>`;
+  dl(new Blob([html],{type:'text/html'}),'threatscan-'+Date.now()+'.html');
+  toast('HTML yuklandi');
+}
+
+function dl(blob,name){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+</script>
+</body>
+</html>
