@@ -34,7 +34,7 @@ function extractIndicators(text) {
     phones:    [...new Set(text.match(PATTERNS.phone) || [])].slice(0, 5),
     usernames: [...new Set(text.match(PATTERNS.username) || [])].slice(0, 10),
     hashes:    [...new Set(text.match(PATTERNS.hash) || [])].slice(0, 3),
-    domains:   [...new Set(text.match(PATTERNS.domain) || [])].filter(d => !found?.urls?.some(u => u.includes(d))).slice(0, 5),
+    domains: [...new Set(text.match(PATTERNS.domain) || [])].slice(0, 5),
   };
 
   // Shubhali so'zlarni tekshirish
