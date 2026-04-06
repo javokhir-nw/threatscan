@@ -207,6 +207,15 @@ function copyReport() {
   if (d.meta?.type === 'text') {
     const malF = d.findings?.filter(f => f.status === 'bad').length || 0;
     const warnF = d.findings?.filter(f => f.status === 'warn').length || 0;
+    const aiLines = d.aiResult ? [
+      '',
+      '--- AI TAHLIL (Gemini) ---',
+      'Daraja: ' + (d.aiResult.xavf_darajasi || '—'),
+      'Matn turi: ' + (d.aiResult.matn_turi || '—'),
+      'Xulosa: ' + (d.aiResult.xulosa || '—'),
+      d.aiResult.sabab?.length ? 'Sabab: ' + d.aiResult.sabab.join(', ') : '',
+      d.aiResult.tavsiya ? 'Tavsiya: ' + d.aiResult.tavsiya : '',
+    ].filter(Boolean) : [];
     navigator.clipboard.writeText([
       '=== THREATSCAN PRO HISOBOT ===',
       'Sana: ' + new Date(d.ts).toLocaleString(),
@@ -215,7 +224,9 @@ function copyReport() {
       'Xavfli element: ' + malF,
       'Shubhali element: ' + warnF,
       'Jami topildi: ' + (d.findings?.length || 0),
-      d.aiResult ? 'AI xulosa: ' + d.aiResult.xulosa : '',
+      'Xavf darajasi: ' + (d.totalRisk || 0) + '%',
+      ...aiLines,
+      '',
       malF > 0 ? 'NATIJA: XAVFLI' : warnF > 0 ? 'NATIJA: SHUBHALI' : 'NATIJA: XAVFSIZ',
     ].filter(Boolean).join('\n')).then(() => toast('[OK] NUSXALANDI'));
     return;

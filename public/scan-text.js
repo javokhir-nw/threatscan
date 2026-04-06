@@ -214,7 +214,7 @@ async function geminiAnalyze(text, found) {
 // ── renderText ──────────────────────────────────────────────
 
 function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
-  window._data = { text, findings, meta: { type: 'text', value: text.slice(0, 60) + '…' }, ts: new Date().toISOString() };
+  window._data = { text, findings, totalRisk, aiResult, meta: { type: 'text', value: text.slice(0, 60) + '…' }, ts: new Date().toISOString() };
 
   const malF = findings.filter(f => f.status === 'bad');
   const warnF = findings.filter(f => f.status === 'warn');
@@ -222,7 +222,7 @@ function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
 
   // Sources summary
   document.getElementById('sourcesRow').innerHTML = [
-    { name: 'JAMI ELEMENT', val: findings.length + ' TA', cls: findings.length > 0 ? 'ok' : 'na' },
+    { name: 'JAMI ELEMENT', val: findings.length + ' TA', cls: malF.length > 0 ? 'bad' : warnF.length > 0 ? 'warn' : findings.length > 0 ? 'ok' : 'na' },
     { name: 'XAVFLI', val: malF.length + ' TA', cls: malF.length > 0 ? 'bad' : 'ok' },
     { name: 'SHUBHALI', val: warnF.length + ' TA', cls: warnF.length > 0 ? 'warn' : 'ok' },
     { name: 'KALIT SO\'Z', val: (suspWords?.length || 0) + ' TA', cls: (suspWords?.length || 0) >= 3 ? 'warn' : 'ok' },
@@ -274,8 +274,10 @@ function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
     : totalRisk > 20
       ? 'linear-gradient(90deg,#aa8800,var(--yellow))'
       : 'linear-gradient(90deg,var(--green2),var(--green))';
-  document.getElementById('riskLabel').textContent = totalRisk + '% — ' +
+  const riskLabelEl = document.getElementById('riskLabel');
+  riskLabelEl.textContent = totalRisk + '% — ' +
     (totalRisk > 60 ? 'YUQORI XAVF' : totalRisk > 20 ? "O'RTA XAVF" : 'QUYI XAVF');
+  riskLabelEl.style.color = totalRisk > 60 ? 'var(--red)' : totalRisk > 20 ? 'var(--yellow)' : 'var(--green)';
 
   document.getElementById('catsSection').style.display = 'none';
 
