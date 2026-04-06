@@ -154,7 +154,7 @@ Faqat JSON qaytар, hech qanday qo'shimcha matn yozma:
 
   const geminiBody = JSON.stringify({
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 1024 }
+    generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
   });
 
   const geminiBodyBuf = Buffer.from(geminiBody);

@@ -205,8 +205,10 @@ async function geminiAnalyze(text, found) {
   if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
   const data = await res.json();
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const clean = raw.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  const clean = raw.replace(/```json\n?|```\n?/g, '').trim();
+  const jsonMatch = clean.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('JSON topilmadi');
+  return JSON.parse(jsonMatch[0]);
 }
 
 // ── renderText ──────────────────────────────────────────────
