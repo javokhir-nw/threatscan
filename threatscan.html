@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ThreatScan Pro — Kiberxavfsizlik Tahlil</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0b0e;
+  --bg2: #0f1117;
+  --bg3: #151820;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #7a7f8e;
+  --text3: #4a4f5c;
+  --red: #ff3b5c;
+  --red-bg: rgba(255,59,92,0.08);
+  --red-border: rgba(255,59,92,0.2);
+  --yellow: #ffb443;
+  --yellow-bg: rgba(255,180,67,0.08);
+  --yellow-border: rgba(255,180,67,0.2);
+  --green: #00d68f;
+  --green-bg: rgba(0,214,143,0.08);
+  --green-border: rgba(0,214,143,0.2);
+  --blue: #4d9fff;
+  --blue-bg: rgba(77,159,255,0.08);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,59,92,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,59,92,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+header {
+  padding: 40px 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-icon {
+  width: 42px; height: 42px;
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.brand-icon svg { width: 22px; height: 22px; stroke: var(--red); fill: none; stroke-width: 1.8; }
+
+.brand-name {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.brand-name span { color: var(--red); }
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text2);
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* API Key */
+.api-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.api-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.api-box input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.api-box input:focus { border-color: var(--border2); }
+
+.btn-save {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 9px 18px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.btn-save:hover { background: var(--bg3); border-color: var(--text3); }
+
+.api-saved {
+  font-size: 11px;
+  color: var(--green);
+  display: none;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  transition: all .2s;
+  letter-spacing: 0.5px;
+}
+
+.tab.active {
+  background: var(--bg3);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+
+.tab:hover:not(.active) { color: var(--text); }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Input area */
+.input-wrap {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.main-input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.main-input:focus { border-color: var(--red-border); }
+.main-input::placeholder { color: var(--text3); }
+
+.btn-scan {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 10px;
+  padding: 14px 28px;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.btn-scan:hover { background: rgba(255,59,92,0.15); }
+.btn-scan:active { transform: scale(0.98); }
+.btn-scan:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Drop zone */
+.drop-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 16px;
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--red-border);
+  background: var(--red-bg);
+}
+
+.drop-zone svg {
+  width: 36px; height: 36px;
+  stroke: var(--text3);
+  margin: 0 auto 14px;
+  display: block;
+  transition: stroke .2s;
+}
+
+.drop-zone:hover svg { stroke: var(--red); }
+
+.drop-zone h3 {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.drop-zone p { font-size: 12px; color: var(--text2); }
+
+.file-info {
+  display: none;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-info.show { display: flex; }
+.file-name { flex: 1; font-size: 13px; }
+.file-size { font-size: 12px; color: var(--text2); }
+
+/* Scanning */
+.scanning-bar {
+  display: none;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 16px;
+}
+
+.scanning-bar.show { display: flex; }
+
+.scan-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.scan-text { font-size: 13px; color: var(--text2); }
+.scan-detail { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+.scan-progress {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 500;
+}
+
+/* Results */
+#results { display: none; animation: fadeIn .3s ease; }
+#results.show { display: block; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* Verdict */
+.verdict {
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.verdict.clean { background: var(--green-bg); border: 1px solid var(--green-border); }
+.verdict.malicious { background: var(--red-bg); border: 1px solid var(--red-border); }
+.verdict.suspicious { background: var(--yellow-bg); border: 1px solid var(--yellow-border); }
+.verdict.unknown { background: var(--bg2); border: 1px solid var(--border); }
+
+.verdict-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.verdict.clean .verdict-icon { background: rgba(0,214,143,0.15); }
+.verdict.malicious .verdict-icon { background: rgba(255,59,92,0.15); }
+.verdict.suspicious .verdict-icon { background: rgba(255,180,67,0.15); }
+.verdict.unknown .verdict-icon { background: var(--bg3); }
+
+.verdict-body { flex: 1; }
+
+.verdict-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.verdict.clean .verdict-label { color: var(--green); }
+.verdict.malicious .verdict-label { color: var(--red); }
+.verdict.suspicious .verdict-label { color: var(--yellow); }
+.verdict.unknown .verdict-label { color: var(--text3); }
+
+.verdict-title {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.verdict.clean .verdict-title { color: var(--green); }
+.verdict.malicious .verdict-title { color: var(--red); }
+.verdict.suspicious .verdict-title { color: var(--yellow); }
+
+.verdict-desc { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+.risk-meter { text-align: right; }
+
+.risk-pct {
+  font-family: var(--sans);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.verdict.clean .risk-pct { color: var(--green); }
+.verdict.malicious .risk-pct { color: var(--red); }
+.verdict.suspicious .risk-pct { color: var(--yellow); }
+
+.risk-label { font-size: 11px; color: var(--text3); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Stats grid */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-n {
+  font-family: var(--sans);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-n.red { color: var(--red); }
+.stat-n.yellow { color: var(--yellow); }
+.stat-n.green { color: var(--green); }
+
+.stat-l { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+
+/* Risk bar */
+.risk-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.risk-title { font-size: 11px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+.risk-val { font-size: 13px; font-weight: 500; }
+
+.bar-bg {
+  height: 8px;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+
+.bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); }
+
+/* Categories */
+.cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+
+.cat {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.cat.danger { background: var(--red-bg); border-color: var(--red-border); color: var(--red); }
+.cat.warn { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow); }
+.cat.info { background: var(--blue-bg); border-color: rgba(77,159,255,0.2); color: var(--blue); }
+
+/* Two-col layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.meta-list { padding: 12px 16px; }
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.meta-row:last-child { border-bottom: none; }
+.meta-key { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.meta-value { font-size: 12px; text-align: right; word-break: break-all; }
+
+/* Engine results */
+.engines-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.engines-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  gap: 4px;
+}
+
+.engines-grid::-webkit-scrollbar { width: 4px; }
+.engines-grid::-webkit-scrollbar-track { background: transparent; }
+.engines-grid::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.engine-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 7px;
+  gap: 8px;
+  transition: background .15s;
+}
+
+.engine-row:hover { background: var(--bg3); }
+.engine-row.threat { background: rgba(255,59,92,0.05); }
+.engine-row.threat:hover { background: rgba(255,59,92,0.1); }
+
+.eng-name { font-size: 12px; color: var(--text2); }
+.eng-result { font-size: 11px; font-weight: 500; text-align: right; }
+.eng-result.bad { color: var(--red); }
+.eng-result.sus { color: var(--yellow); }
+.eng-result.ok { color: var(--text3); }
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-action:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 100;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all .25s;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Section title */
+.sec-title {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2,1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .engines-grid { grid-template-columns: 1fr; }
+  .verdict { flex-wrap: wrap; }
+  .risk-meter { width: 100%; text-align: left; }
+  header { flex-wrap: wrap; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Threat<span>Scan</span> Pro</div>
+        <div class="brand-sub">Kiberxavfsizlik Tahlil Tizimi</div>
+      </div>
+    </div>
+    <div class="status-dot">
+      <div class="dot"></div>
+      VirusTotal API v3
+    </div>
+  </header>
+
+  <!-- API Key -->
+  <div class="api-box">
+    <span class="api-label">API Key</span>
+    <input type="password" id="apiKey" placeholder="VirusTotal API kalitingizni kiriting — bepul: virustotal.com/gui/sign-in"/>
+    <button class="btn-save" onclick="saveKey()">Saqlash</button>
+    <span class="api-saved" id="apiSaved">✓ Saqlandi</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('url', this)">// URL Tahlil</button>
+    <button class="tab" onclick="switchTab('file', this)">// Fayl Skanerlash</button>
+    <button class="tab" onclick="switchTab('hash', this)">// Hash Qidirish</button>
+  </div>
+
+  <!-- URL Panel -->
+  <div class="panel active" id="tab-url">
+    <div class="input-wrap">
+      <input class="main-input" type="text" id="urlInput" placeholder="https://shubhali-sayt.com yoki har qanday URL..."/>
+      <button class="btn-scan" id="urlBtn" onclick="scanUrl()">SKANERLASH →</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-top:-12px;margin-bottom:16px;">
+      HTTP/HTTPS, IP manzillar, qisqartilgan linklar — barchasi qabul qilinadi
+    </div>
+  </div>
+
+  <!-- File Panel -->
+  <div class="panel" id="tab-file">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <h3>Fayl yuklang</h3>
+      <p>Bosing yoki faylni bu yerga tashlang · Maks 32MB</p>
+      <p style="margin-top:6px;font-size:11px;color:var(--text3)">.exe .dll .pdf .docx .zip .apk .js — har qanday format</p>
+      <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)"/>
+    </div>
+    <div class="file-info" id="fileInfo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="file-name" id="fileNameText">—</span>
+      <span class="file-size" id="fileSizeText">—</span>
+      <button class="btn-scan" onclick="scanFile()" id="fileScanBtn">FAYL SKANERLASH →</button>
+    </div>
+  </div>
+
+  <!-- Hash Panel -->
+  <div class="panel" id="tab-hash">
+    <div class="input-wrap">
+      <input class="main-input" type="text" id="hashInput" placeholder="MD5: d41d8cd98f00... · SHA1: da39a3ee... · SHA256: e3b0c44298..."/>
+      <button class="btn-scan" onclick="scanHash()">QIDIRISH →</button>
+    </div>
+  </div>
+
+  <!-- Scanning indicator -->
+  <div class="scanning-bar" id="scanningBar">
+    <div class="scan-spinner"></div>
+    <div>
+      <div class="scan-text" id="scanText">VirusTotal orqali tekshirilmoqda...</div>
+      <div class="scan-detail" id="scanDetail">70+ antivirus engine ishga tushirildi</div>
+    </div>
+    <div class="scan-progress" id="scanProgress"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <!-- Verdict -->
+    <div class="verdict unknown" id="verdictBox">
+      <div class="verdict-icon" id="verdictIcon">?</div>
+      <div class="verdict-body">
+        <div class="verdict-label" id="verdictLabel">NATIJA</div>
+        <div class="verdict-title" id="verdictTitle">Tahlil</div>
+        <div class="verdict-desc" id="verdictDesc">—</div>
+      </div>
+      <div class="risk-meter">
+        <div class="risk-pct" id="riskPct">—</div>
+        <div class="risk-label">Xavf darajasi</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-n red" id="sMal">—</div>
+        <div class="stat-l">Xavfli</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n yellow" id="sSus">—</div>
+        <div class="stat-l">Shubhali</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n green" id="sClean">—</div>
+        <div class="stat-l">Xavfsiz</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sTotal" style="color:var(--text)">—</div>
+        <div class="stat-l">Jami engine</div>
+      </div>
+    </div>
+
+    <!-- Risk bar -->
+    <div class="risk-section">
+      <div class="risk-header">
+        <span class="risk-title">Xavf Darajasi Grafigi</span>
+        <span class="risk-val" id="riskValText">—</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="barFill" style="width:0%"></div>
+      </div>
+      <div class="bar-labels">
+        <span>XAVFSIZ (0%)</span>
+        <span>O'RTA (50%)</span>
+        <span>XAVFLI (100%)</span>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div id="catSection" style="display:none;margin-bottom:20px;">
+      <div class="sec-title">Tahdid Kategoriyalari</div>
+      <div class="cats" id="catsContainer"></div>
+    </div>
+
+    <!-- Meta + Details -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">// Asosiy Ma'lumotlar</div>
+        <div class="meta-list" id="metaList"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">// Texnik Tafsilotlar</div>
+        <div class="meta-list" id="techList"></div>
+      </div>
+    </div>
+
+    <!-- Engine results -->
+    <div class="engines-card">
+      <div class="card-header" style="padding:14px 20px;">
+        // Antivirus Engine Natijalari
+        <span id="engCount" style="float:right;color:var(--text2)">—</span>
+      </div>
+      <div class="engines-grid" id="enginesGrid"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sec-title">Amallar</div>
+    <div class="actions">
+      <button class="btn-action" onclick="copyText()">📋 Hisobotni nusxalash</button>
+      <button class="btn-action" onclick="downloadJSON()">⬇ JSON yuklash</button>
+      <button class="btn-action" onclick="downloadHTML()">📄 HTML hisobot</button>
+      <button class="btn-action" onclick="newScan()">↺ Yangi skan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let _vtKey = localStorage.getItem('vt_key') || '';
+let _scanData = null;
+let _selectedFile = null;
+const API = 'https://www.virustotal.com/api/v3';
+
+// Init
+window.onload = () => {
+  if(_vtKey) {
+    document.getElementById('apiKey').value = _vtKey;
+    document.getElementById('apiSaved').style.display = 'inline';
+  }
+  setupDrop();
+};
+
+function saveKey() {
+  _vtKey = document.getElementById('apiKey').value.trim();
+  if(_vtKey) {
+    localStorage.setItem('vt_key', _vtKey);
+    document.getElementById('apiSaved').style.display = 'inline';
+    toast('API kaliti saqlandi ✓');
+  }
+}
+
+function getKey() {
+  return _vtKey || document.getElementById('apiKey').value.trim();
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  hideResults();
+}
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function showScanning(text, detail='') {
+  const bar = document.getElementById('scanningBar');
+  bar.classList.add('show');
+  document.getElementById('scanText').textContent = text;
+  document.getElementById('scanDetail').textContent = detail;
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results').classList.remove('show');
+}
+
+function setProgress(p) {
+  document.getElementById('scanProgress').textContent = p;
+}
+
+function hideScanning() {
+  document.getElementById('scanningBar').classList.remove('show');
+}
+
+function hideResults() {
+  document.getElementById('results').style.display = 'none';
+  hideScanning();
+}
+
+function newScan() {
+  hideResults();
+  document.getElementById('urlInput').value = '';
+  document.getElementById('hashInput').value = '';
+  _selectedFile = null;
+  document.getElementById('fileInfo').classList.remove('show');
+}
+
+async function vtFetch(path, opts={}) {
+  const key = getKey();
+  if(!key) { toast('⚠ API kalitini kiriting!'); throw new Error('No API key'); }
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { 'x-apikey': key, ...(opts.headers||{}) }
+  });
+  if(!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function pollAnalysis(id, maxWait=60) {
+  const start = Date.now();
+  let attempt = 0;
+  while((Date.now()-start) < maxWait*1000) {
+    await sleep(3000);
+    attempt++;
+    setProgress(`${attempt*3}s`);
+    const d = await vtFetch('/analyses/' + id);
+    if(d.data.attributes.status === 'completed') return d;
+  }
+  throw new Error('Tahlil vaqti tugadi (60s)');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// URL scan
+async function scanUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if(!url) { toast('URL kiriting'); return; }
+  showScanning('URL yuborilmoqda...', 'VirusTotal\'ga so\'rov yuborilmoqda');
+  try {
+    const form = new URLSearchParams();
+    form.append('url', url);
+    const sub = await vtFetch('/urls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString()
+    });
+    showScanning('URL skanerlanmoqda...', '70+ antivirus engine tekshirmoqda');
+    const result = await pollAnalysis(sub.data.id);
+
+    // Try to get URL details
+    const urlId = btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const details = await vtFetch('/urls/' + urlId).catch(() => null);
+
+    renderResults(result.data.attributes, details?.data?.attributes, { type:'url', value:url });
+  } catch(e) {
+    hideScanning();
+    toast('Xato: ' + e.message, 4000);
+  }
+}
+
+// Hash scan
+async function scanHash() {
+  const hash = document.getElementById('hashInput').value.trim();
+  if(!hash) { toast('Hash kiriting'); return; }
+  showScanning('Hash qidirilmoqda...', 'Fayl ma\'lumotlar bazasida izlanmoqda');
+  try {
+    const data = await vtFetch('/files/' + hash);
+    renderResults(data.data.attributes, data.data.attributes, { type:'hash', value:hash });
+  } catch(e) {
+    hideScanning();
+    toast('Xato: ' + e.message, 4000);
+  }
+}
+
+// File handling
+function setupDrop() {
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if(f) setFile(f);
+  });
+}
+
+function handleFile(input) {
+  if(input.files[0]) setFile(input.files[0]);
+}
+
+function setFile(f) {
+  _selectedFile = f;
+  document.getElementById('fileNameText').textContent = f.name;
+  document.getElementById('fileSizeText').textContent = formatSize(f.size);
+  document.getElementById('fileInfo').classList.add('show');
+}
+
+function formatSize(bytes) {
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+async function scanFile() {
+  if(!_selectedFile) return;
+  if(_selectedFile.size > 32*1024*1024) { toast('Fayl hajmi 32MB dan oshmasligi kerak'); return; }
+  showScanning('Fayl yuklanmoqda...', _selectedFile.name);
+  try {
+    const fd = new FormData();
+    fd.append('file', _selectedFile);
+    const sub = await vtFetch('/files', { method:'POST', body:fd });
+    showScanning('Fayl skanerlanmoqda...', '70+ antivirus engine tekshirmoqda');
+    const result = await pollAnalysis(sub.data.id);
+    renderResults(result.data.attributes, null, { type:'file', value:_selectedFile.name });
+  } catch(e) {
+    hideScanning();
+    toast('Xato: ' + e.message, 4000);
+  }
+}
+
+// Render
+function renderResults(attrs, details, meta) {
+  hideScanning();
+  _scanData = { attrs, details, meta, timestamp: new Date().toISOString() };
+
+  const stats = attrs.stats || {};
+  const mal = stats.malicious || 0;
+  const sus = stats.suspicious || 0;
+  const undet = stats.undetected || 0;
+  const total = Object.values(stats).reduce((a,b) => a+b, 0);
+  const riskPct = Math.round(((mal + sus * 0.5) / Math.max(total, 1)) * 100);
+
+  // Stats
+  document.getElementById('sMal').textContent = mal;
+  document.getElementById('sSus').textContent = sus;
+  document.getElementById('sClean').textContent = undet;
+  document.getElementById('sTotal').textContent = total;
+
+  // Verdict
+  const vBox = document.getElementById('verdictBox');
+  let vClass, vLabel, vTitle, vDesc, vIcon;
+
+  if(mal >= 10) {
+    vClass='malicious'; vLabel='XAVFLI TAHDID'; vTitle='Zararli Dastur Aniqlandi';
+    vDesc=`${mal} ta antivirus engine tahdid topdi`; vIcon='✕';
+  } else if(mal > 0 || sus > 5) {
+    vClass='malicious'; vLabel='XAVFLI'; vTitle='Tahdid Aniqlandi';
+    vDesc=`${mal} malicious, ${sus} suspicious natija`; vIcon='!';
+  } else if(sus > 0 || (mal === 0 && total > 0 && riskPct > 5)) {
+    vClass='suspicious'; vLabel='SHUBHALI'; vTitle='Shubhali Faoliyat';
+    vDesc=`${sus} ta engine shubhali deb belgiladi`; vIcon='⚠';
+  } else if(total > 0) {
+    vClass='clean'; vLabel='XAVFSIZ'; vTitle='Tahdid Topilmadi';
+    vDesc=`${total} ta engine tekshirdi — hammasi xavfsiz`; vIcon='✓';
+  } else {
+    vClass='unknown'; vLabel='NOANIQ'; vTitle='Ma\'lumot Yetarli Emas';
+    vDesc='Bu ob\'ekt hali tahlil qilinmagan'; vIcon='?';
+  }
+
+  vBox.className = 'verdict ' + vClass;
+  document.getElementById('verdictLabel').textContent = vLabel;
+  document.getElementById('verdictTitle').textContent = vTitle;
+  document.getElementById('verdictDesc').textContent = vDesc;
+  document.getElementById('verdictIcon').textContent = vIcon;
+  document.getElementById('riskPct').textContent = riskPct + '%';
+
+  // Risk bar
+  const barFill = document.getElementById('barFill');
+  barFill.style.width = riskPct + '%';
+  barFill.style.background = riskPct > 60 ? 'var(--red)' : riskPct > 20 ? 'var(--yellow)' : 'var(--green)';
+  document.getElementById('riskValText').textContent = riskPct + '% — ' + (riskPct>60?'Yuqori xavf':riskPct>20?'O\'rta xavf':'Quyi xavf');
+
+  // Categories
+  const cats = { ...(attrs.categories||{}), ...(details?.categories||{}) };
+  const catArr = [...new Set(Object.values(cats))].slice(0, 12);
+  if(catArr.length) {
+    document.getElementById('catSection').style.display = 'block';
+    const dangerWords = ['malware','phish','malicious','spam','exploit','trojan','ransomware','backdoor'];
+    const warnWords = ['suspicious','adware','pua','greyware','riskware'];
+    document.getElementById('catsContainer').innerHTML = catArr.map(c => {
+      const cl = dangerWords.some(w=>c.toLowerCase().includes(w)) ? 'danger' :
+                 warnWords.some(w=>c.toLowerCase().includes(w)) ? 'warn' : 'info';
+      return `<span class="cat ${cl}">${c}</span>`;
+    }).join('');
+  } else {
+    document.getElementById('catSection').style.display = 'none';
+  }
+
+  // Meta
+  const metaItems = [];
+  if(meta.value) metaItems.push(['Maqsad', meta.value.length>60 ? meta.value.slice(0,60)+'…' : meta.value]);
+  metaItems.push(['Tur', meta.type.toUpperCase()]);
+  if(attrs.last_analysis_date) metaItems.push(['Oxirgi skan', new Date(attrs.last_analysis_date*1000).toLocaleString('uz-UZ')]);
+  if(attrs.times_submitted) metaItems.push(['Yuborilgan', attrs.times_submitted + ' marta']);
+  if(attrs.reputation !== undefined) metaItems.push(['Reputatsiya', (attrs.reputation>0?'+':'')+attrs.reputation]);
+  if(attrs.tld) metaItems.push(['TLD', '.'+attrs.tld]);
+  if(attrs.country) metaItems.push(['Mamlakat', attrs.country]);
+
+  document.getElementById('metaList').innerHTML = metaItems.map(([k,v]) =>
+    `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-value">${v}</span></div>`
+  ).join('');
+
+  // Tech
+  const techItems = [];
+  if(attrs.sha256) techItems.push(['SHA256', attrs.sha256.slice(0,18)+'…']);
+  if(attrs.sha1) techItems.push(['SHA1', attrs.sha1.slice(0,18)+'…']);
+  if(attrs.md5) techItems.push(['MD5', attrs.md5]);
+  if(attrs.size) techItems.push(['Hajm', formatSize(attrs.size)]);
+  if(attrs.type_description) techItems.push(['Fayl turi', attrs.type_description]);
+  if(attrs.magic) techItems.push(['Magic', attrs.magic.slice(0,30)]);
+  if(attrs.ssdeep) techItems.push(['SSDeep', attrs.ssdeep.slice(0,20)+'…']);
+
+  const techHTML = techItems.length ? techItems.map(([k,v]) =>
+    `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-value">${v}</span></div>`
+  ).join('') : '<div style="padding:16px;font-size:12px;color:var(--text3)">Bu tur uchun texnik ma\'lumot yo\'q</div>';
+
+  document.getElementById('techList').innerHTML = techHTML;
+
+  // Engines
+  const results = attrs.results || {};
+  const engEntries = Object.entries(results).sort((a,b) => {
+    const rank = x => x.category==='malicious'?0:x.category==='suspicious'?1:2;
+    return rank(a[1]) - rank(b[1]);
+  });
+
+  document.getElementById('engCount').textContent = engEntries.length + ' engine';
+  document.getElementById('enginesGrid').innerHTML = engEntries.map(([eng, r]) => {
+    const isBad = r.category==='malicious';
+    const isSus = r.category==='suspicious';
+    const cls = isBad ? 'threat' : '';
+    const rCls = isBad ? 'bad' : isSus ? 'sus' : 'ok';
+    const label = r.result || (r.category==='undetected' ? 'Aniqlanmadi' : r.category || '—');
+    return `<div class="engine-row ${cls}">
+      <span class="eng-name">${eng}</span>
+      <span class="eng-result ${rCls}">${label}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// Export functions
+function copyText() {
+  if(!_scanData) return;
+  const {attrs, meta} = _scanData;
+  const s = attrs.stats || {};
+  const mal = s.malicious||0, sus = s.suspicious||0;
+  const total = Object.values(s).reduce((a,b)=>a+b,0);
+  const risk = Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+  const txt = [
+    '=== ThreatScan Pro Hisobot ===',
+    `Sana: ${new Date().toLocaleString('uz-UZ')}`,
+    `Maqsad: ${meta.value}`,
+    `Tur: ${meta.type.toUpperCase()}`,
+    '',
+    '--- Statistika ---',
+    `Xavfli: ${mal}`,
+    `Shubhali: ${sus}`,
+    `Xavfsiz: ${s.undetected||0}`,
+    `Jami: ${total}`,
+    `Xavf darajasi: ${risk}%`,
+    '',
+    '--- Verdict ---',
+    mal > 0 ? 'XAVFLI — Tahdid aniqlandi' : sus > 0 ? 'SHUBHALI' : 'XAVFSIZ',
+    '',
+    'ThreatScan Pro tomonidan yaratildi'
+  ].join('\n');
+  navigator.clipboard.writeText(txt).then(() => toast('✓ Nusxalandi'));
+}
+
+function downloadJSON() {
+  if(!_scanData) return;
+  const blob = new Blob([JSON.stringify(_scanData, null, 2)], {type:'application/json'});
+  dl(blob, 'threatscan-' + Date.now() + '.json');
+}
+
+function downloadHTML() {
+  if(!_scanData) return;
+  const {attrs, meta} = _scanData;
+  const s = attrs.stats||{};
+  const mal = s.malicious||0, sus = s.suspicious||0;
+  const total = Object.values(s).reduce((a,b)=>a+b,0);
+  const risk = Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+  const results = attrs.results || {};
+  const engRows = Object.entries(results).sort((a,b)=>{
+    const rank=x=>x.category==='malicious'?0:x.category==='suspicious'?1:2;
+    return rank(a[1])-rank(b[1]);
+  }).slice(0,50).map(([e,r])=>`<tr style="border-bottom:1px solid #222">
+    <td style="padding:6px 12px;font-size:12px;color:#aaa">${e}</td>
+    <td style="padding:6px 12px;font-size:12px;color:${r.category==='malicious'?'#ff3b5c':r.category==='suspicious'?'#ffb443':'#555'};font-weight:500">${r.result||r.category||'—'}</td>
+  </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ThreatScan Report</title></head>
+<body style="background:#0a0b0e;color:#e8eaf0;font-family:monospace;padding:40px;max-width:800px;margin:auto">
+<h1 style="color:#ff3b5c;font-family:sans-serif;margin-bottom:4px">ThreatScan Pro</h1>
+<p style="color:#555;font-size:12px;margin-bottom:32px">${new Date().toLocaleString()} · ${meta.value}</p>
+<div style="background:#0f1117;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:24px">
+  <div style="font-size:28px;font-weight:700;color:${mal>0?'#ff3b5c':sus>0?'#ffb443':'#00d68f'};margin-bottom:8px">
+    ${mal>0?'XAVFLI':sus>0?'SHUBHALI':'XAVFSIZ'} · Xavf: ${risk}%
+  </div>
+  <div style="color:#aaa;font-size:14px">Xavfli: ${mal} · Shubhali: ${sus} · Xavfsiz: ${s.undetected||0} · Jami: ${total}</div>
+</div>
+<table style="width:100%;border-collapse:collapse;background:#0f1117;border-radius:8px;overflow:hidden">
+  <tr style="background:#151820"><th style="padding:10px 12px;text-align:left;font-size:11px;color:#555;letter-spacing:1px">ENGINE</th><th style="padding:10px 12px;text-align:left;font-size:11px;color:#555;letter-spacing:1px">NATIJA</th></tr>
+  ${engRows}
+</table>
+</body></html>`;
+  dl(new Blob([html],{type:'text/html'}), 'threatscan-report-'+Date.now()+'.html');
+  toast('✓ HTML hisobot yuklandi');
+}
+
+function dl(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+</script>
+</body>
+</html>
