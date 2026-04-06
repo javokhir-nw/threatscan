@@ -69,7 +69,7 @@ textarea.main-input{border-right:1px solid var(--border);border-radius:4px;resiz
 .btn-scan:hover::before{transform:translateX(100%)}
 .btn-scan:hover{border-color:var(--border3);box-shadow:0 0 20px rgba(0,255,136,0.2);color:#fff}
 .btn-scan:active{transform:scale(0.98)}
-.btn-full{border-radius:4px;width:100%;margin-top:10px;padding:14px}
+.btn-full{border-radius:4px !important;width:100%;margin-top:10px;padding:14px}
 
 /* Drop zone */
 .drop-area{border:1px dashed var(--border2);border-radius:4px;padding:36px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;margin-top:12px}
@@ -329,7 +329,7 @@ textarea.main-input{border-right:1px solid var(--border);border-radius:4px;resiz
     <div class="input-section">
       <div class="input-label">SHUBHALI MATN YOKI XABAR KIRITING</div>
       <textarea class="main-input" id="textInput" rows="7"
-        placeholder="Telegram xabari, SMS, email yoki har qanday matn...&#10;&#10;Tizim avtomatik ravishda URL, IP, koordinata, telefon,&#10;username va shubhali kalit so'zlarni topib tekshiradi."></textarea>
+                placeholder="Telegram xabari, SMS, email yoki har qanday matn...&#10;&#10;Tizim avtomatik ravishda URL, IP, koordinata, telefon,&#10;username va shubhali kalit so'zlarni topib tekshiradi."></textarea>
       <button class="btn-scan btn-full" onclick="scan('text')">MATN TAHLIL QILISH</button>
     </div>
   </div>

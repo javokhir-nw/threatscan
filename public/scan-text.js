@@ -178,13 +178,40 @@ async function scanText(text) {
     totalRisk = Math.max(totalRisk, Math.min(suspWords.length * 10, 60));
   }
 
+  // ── Gemini AI tahlil ──
+  let aiResult = null;
+  try {
+    document.getElementById('scanSub').textContent = 'AI matn tahlili qilinmoqda...';
+    aiResult = await geminiAnalyze(text, found);
+    if (aiResult && aiResult.xavf_foiz) {
+      totalRisk = Math.max(totalRisk, aiResult.xavf_foiz);
+    }
+  } catch (e) {
+    console.warn('Gemini xatosi:', e.message);
+  }
+
   stopTimer();
-  renderText(text, findings, totalRisk, found, suspWords);
+  renderText(text, findings, totalRisk, found, suspWords, aiResult);
+}
+
+// ── Gemini AI funksiya ──────────────────────────────────────
+
+async function geminiAnalyze(text, found) {
+  const res = await fetch('/api/gemini/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, indicators: found })
+  });
+  if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
+  const data = await res.json();
+  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const clean = raw.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
 }
 
 // ── renderText ──────────────────────────────────────────────
 
-function renderText(text, findings, totalRisk, found, suspWords) {
+function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
   window._data = { text, findings, meta: { type: 'text', value: text.slice(0, 60) + '…' }, ts: new Date().toISOString() };
 
   const malF = findings.filter(f => f.status === 'bad');
@@ -259,16 +286,39 @@ function renderText(text, findings, totalRisk, found, suspWords) {
     ? counts.map(([k, v]) => `<div class="meta-row"><span class="mk">${k}</span><span class="mv">${v} ta topildi</span></div>`).join('')
     : '<div style="padding:14px;font-size:11px;color:var(--text3)">Hech narsa topilmadi</div>';
 
-  // Tech — matn statistika
+  // Tech — matn statistika + AI xulosa
   const words = text.split(/\s+/).length;
   const chars = text.length;
   const links = found?.urls?.length || 0;
-  document.getElementById('techRows').innerHTML = [
+
+  let techHTML = [
     ['Belgilar', chars],
     ['So\'zlar', words],
     ['Linklar', links],
     ['Xavf darajasi', totalRisk + '%'],
   ].map(([k, v]) => `<div class="meta-row"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join('');
+
+  // AI tahlil bloki
+  if (aiResult) {
+    const aiColor = aiResult.xavf_darajasi === 'XAVFLI' ? 'var(--red)' :
+                    aiResult.xavf_darajasi === 'SHUBHALI' ? 'var(--yellow)' : 'var(--green)';
+    techHTML += `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">// GEMINI AI TAHLIL</div>
+        <div style="font-size:11px;color:${aiColor};font-weight:600;margin-bottom:6px">
+          ${aiResult.xavf_darajasi || '—'} · ${aiResult.matn_turi || '—'}
+        </div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
+          ${aiResult.xulosa || '—'}
+        </div>
+        ${aiResult.sabab?.length ? `<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Sabab:</div>
+        <div style="font-size:11px;color:var(--yellow)">${aiResult.sabab.join(' · ')}</div>` : ''}
+        ${aiResult.tavsiya ? `<div style="font-size:10px;color:var(--text3);margin-top:6px;margin-bottom:4px">Tavsiya:</div>
+        <div style="font-size:11px;color:var(--green)">${aiResult.tavsiya}</div>` : ''}
+      </div>`;
+  }
+
+  document.getElementById('techRows').innerHTML = techHTML;
 
   // Findings jadval
   document.getElementById('engCount').textContent = findings.length + ' TOPILDI';
