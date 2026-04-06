@@ -328,9 +328,13 @@ textarea.main-input{border-right:1px solid var(--border);border-radius:4px;resiz
   <div class="panel" id="tab-text">
     <div class="input-section">
       <div class="input-label">SHUBHALI MATN YOKI XABAR KIRITING</div>
-      <textarea class="main-input" id="textInput" rows="7"
-                placeholder="Telegram xabari, SMS, email yoki har qanday matn...&#10;&#10;Tizim avtomatik ravishda URL, IP, koordinata, telefon,&#10;username va shubhali kalit so'zlarni topib tekshiradi."></textarea>
-      <button class="btn-scan btn-full" onclick="scan('text')">MATN TAHLIL QILISH</button>
+      <textarea id="textInput" rows="7"
+                placeholder="Telegram xabari, SMS, email yoki har qanday matn..."
+                style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:4px 4px 0 0;padding:15px 20px;color:var(--green);font-family:var(--mono);font-size:13px;outline:none;resize:vertical;caret-color:var(--green);line-height:1.6;display:block"></textarea>
+      <button onclick="scan('text')"
+              style="width:100%;background:linear-gradient(135deg,#003320,#005535);border:1px solid var(--border2);border-top:none;border-radius:0 0 4px 4px;padding:14px;color:var(--green);font-family:var(--title);font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .3s">
+        MATN TAHLIL QILISH
+      </button>
     </div>
   </div>
 
