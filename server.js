@@ -98,29 +98,57 @@ app.post('/api/gemini/analyze', async (req, res) => {
   const text = parsed.text || '';
   const indicators = parsed.indicators || {};
 
-  const prompt = `Sen kiberxavfsizlik mutaxassisisan. Quyidagi matnni tahlil qil va JSON formatda javob ber.
+  const prompt = `Sen tajribali kiberxavfsizlik, firibgarlik va ijtimoiy muhandislik tahlili mutaxassisisan. Matnni chuqur tahlil qil.
 
-MATN:
+TAHLIL QILINADIGAN MATN:
 """
 ${text.slice(0, 2000)}
 """
 
-TOPILGAN INDIKATORLAR:
-- URLlar: ${(indicators.urls || []).join(', ') || 'yo\'q'}
-- IPlar: ${(indicators.ips || []).join(', ') || 'yo\'q'}
-- Telefonlar: ${(indicators.phones || []).join(', ') || 'yo\'q'}
-- Usernames: ${(indicators.usernames || []).join(', ') || 'yo\'q'}
-- Koordinatalar: ${(indicators.coords || []).join(', ') || 'yo\'q'}
+TEXNIK INDIKATORLAR (agar mavjud bo'lsa):
+- URLlar: ${(indicators.urls || []).join(', ') || "yo'q"}
+- IPlar: ${(indicators.ips || []).join(', ') || "yo'q"}
+- Telefonlar: ${(indicators.phones || []).join(', ') || "yo'q"}
+- Usernames: ${(indicators.usernames || []).join(', ') || "yo'q"}
+- Koordinatalar: ${(indicators.coords || []).join(', ') || "yo'q"}
 
-Faqat JSON qaytар, boshqa hech narsa yozma:
+TAHLIL QO'LLANMASI:
+Quyidagi belgilarni aniqla:
+
+SCAM belgilari:
+- Katta pul va'dasi + kichik to'lov so'rash ("avans firibgarligi")
+- "Prezident/hukumat/davlat tomonidan pul ajratildi"
+- "Yutdingiz", "tanlandi", "g'olib bo'ldingiz"
+- Karta raqami, CVV, PIN so'rash
+- Shaxsiy ma'lumot so'rash
+
+PHISHING belgilari:
+- Login, parol, SMS kod so'rash
+- Soxta bank/hukumat xabari
+- "Hisobingiz bloklanadi/o'chiriladi"
+- Shoshiltirish, qo'rqitish
+
+SPAM/REKLAMA belgilari:
+- Tijorat reklama
+- Chegirma, aksiya takliflari
+- Ommaviy yuborilgan xabar ko'rinishi
+
+SOCIAL ENGINEERING:
+- Ishonch qozonib ma'lumot olish urinishi
+- Hissiyotga ta'sir qilish (qo'rquv, ochko'zlik, shoshqaloqlik)
+- Noma'lum manba, tekshirib bo'lmaydigan da'volar
+
+MUHIM: Texnik indikator (URL, IP) bo'lmasa ham, FAQAT MATN MAZMUNIGA qarab aniq baho ber.
+
+Faqat JSON qaytар, hech qanday qo'shimcha matn yozma:
 {
   "xavf_darajasi": "XAVFSIZ" yoki "SHUBHALI" yoki "XAVFLI",
-  "xavf_foiz": 0-100 son,
-  "matn_turi": "masalan: reklama, fishing, spam, scam, normal xabar, yangilik...",
-  "til": "matn qaysi tilda",
-  "xulosa": "2-3 jumlada qisqacha tahlil",
-  "sabab": ["xavfli/shubhali bo'lsa sabablari ro'yxat"],
-  "tavsiya": "foydalanuvchiga amaliy maslahat"
+  "xavf_foiz": 0-100,
+  "matn_turi": "SCAM" yoki "PHISHING" yoki "SPAM" yoki "REKLAMA" yoki "SOCIAL_ENGINEERING" yoki "NORMAL" yoki "YANGILIK" yoki "SHAXSIY_XABAR",
+  "til": "uz" yoki "ru" yoki "en" yoki boshqa,
+  "xulosa": "2-3 jumlada aniq tahlil, nima uchun xavfli/xavfsiz",
+  "sabab": ["konkret sabab 1", "konkret sabab 2"],
+  "tavsiya": "foydalanuvchiga aniq amaliy maslahat"
 }`;
 
   const geminiBody = JSON.stringify({
@@ -134,9 +162,7 @@ Faqat JSON qaytар, boshqa hech narsa yozma:
     hostname: 'generativelanguage.googleapis.com',
     path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
   }, geminiBodyBuf, res);
 });
 
