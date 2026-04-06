@@ -245,6 +245,12 @@ function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
   } else if (warnF.length > 0 || (suspWords?.length || 0) >= 3) {
     vc = 'suspicious'; vs = 'SHUBHALI MATN'; vt = "EHTIYOT BO'LING";
     vd = `${warnF.length} shubhali · ${suspWords?.length || 0} kalit so'z`; vi = '⚠';
+  } else if (totalRisk > 60) {
+    vc = 'malicious'; vs = 'XAVFLI MATN'; vt = 'YUQORI XAVF';
+    vd = `Xavf darajasi ${totalRisk}%`; vi = '⛔';
+  } else if (totalRisk > 20) {
+    vc = 'suspicious'; vs = 'SHUBHALI MATN'; vt = "EHTIYOT BO'LING";
+    vd = `Xavf darajasi ${totalRisk}%`; vi = '⚠';
   } else if (findings.length > 0) {
     vc = 'clean'; vs = 'XAVFSIZ'; vt = "TAHDID YO'Q";
     vd = `${findings.length} ta element tekshirildi`; vi = '✓';
