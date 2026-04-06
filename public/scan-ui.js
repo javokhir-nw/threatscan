@@ -2,6 +2,57 @@
 // scan-ui.js — UI animatsiyalar, timer, toast, tab
 // ============================================================
 
+function dlHTML() {
+  if (!window._data) return;
+  if (window._data.meta?.type === 'text') {
+    const findings = window._data.findings || [];
+    const rows = findings.map(f =>
+      `<tr><td style="padding:6px 12px;font-size:11px;color:#5a8a6a">[${f.type}] ${f.value}</td>
+       <td style="padding:6px 12px;font-size:11px;color:${f.status==='bad'?'#ff2244':f.status==='warn'?'#ffcc00':'#2a4a3a'};font-weight:600">
+       ${f.status==='bad'?'XAVFLI':f.status==='warn'?'SHUBHALI':'XAVFSIZ'}</td></tr>`
+    ).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ThreatScan Report</title></head>
+<body style="background:#000305;color:#c8ffe0;font-family:monospace;padding:40px;max-width:820px;margin:auto">
+<h1 style="color:#00ff88;margin-bottom:20px">THREATSCAN PRO — MATN TAHLIL</h1>
+<table style="width:100%;border-collapse:collapse">
+<tr style="background:#071022"><th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">ELEMENT</th>
+<th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">NATIJA</th></tr>
+${rows}</table></body></html>`;
+    const a = document.createElement('a');
+    a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+    a.download = 'threatscan-text-' + Date.now() + '.html';
+    a.click();
+    toast('[DL] HTML YUKLANDI');
+    return;
+  }
+  const s = window._data.attrs?.stats || {};
+  const mal = s.malicious||0, sus = s.suspicious||0;
+  const total = Object.values(s).reduce((a,b)=>a+b,0);
+  const risk = Math.round(((mal+sus*.5)/Math.max(total,1))*100);
+  const color = mal>0?'#ff2244':sus>0?'#ffcc00':'#00ff88';
+  const engs = Object.entries(window._data.attrs?.results||{}).slice(0,60);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ThreatScan Report</title></head>
+<body style="background:#000305;color:#c8ffe0;font-family:monospace;padding:40px;max-width:820px;margin:auto">
+<h1 style="color:#00ff88;margin-bottom:4px">THREATSCAN PRO</h1>
+<p style="color:#2a4a3a;font-size:11px;margin-bottom:28px">${new Date(window._data.ts).toLocaleString()} · ${window._data.meta?.value}</p>
+<div style="background:#050d1a;border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:22px;margin-bottom:22px">
+  <div style="font-size:28px;font-weight:700;color:${color};margin-bottom:8px">${mal>0?'XAVFLI':sus>0?'SHUBHALI':'XAVFSIZ'} · ${risk}%</div>
+  <div style="color:#5a8a6a;font-size:13px">Xavfli: ${mal} · Shubhali: ${sus} · Jami: ${total}</div>
+</div>
+<table style="width:100%;border-collapse:collapse">
+<tr style="background:#071022"><th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">ENGINE</th>
+<th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">NATIJA</th></tr>
+${engs.map(([e,r])=>`<tr style="border-bottom:1px solid #071022"><td style="padding:6px 12px;font-size:11px;color:#5a8a6a">${e}</td>
+<td style="padding:6px 12px;font-size:11px;color:${r.category==='malicious'?'#ff2244':r.category==='suspicious'?'#ffcc00':'#2a4a3a'};font-weight:600">${r.result||r.category||'—'}</td></tr>`).join('')}
+</table></body></html>`;
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  a.download = 'threatscan-report-' + Date.now() + '.html';
+  a.click();
+  toast('[DL] HTML YUKLANDI');
+}
+
+
 // Matrix rain
 (function () {
   const c = document.getElementById('matrix');
@@ -146,15 +197,35 @@ document.addEventListener('DOMContentLoaded', () => {
 // Export
 function copyReport() {
   if (!window._data) return;
-  const s = window._data.attrs?.stats || {};
+  const d = window._data;
+  const s = d.attrs?.stats || {};
   const mal = s.malicious || 0, sus = s.suspicious || 0;
   const total = Object.values(s).reduce((a, b) => a + b, 0);
   const risk = Math.round(((mal + sus * .5) / Math.max(total, 1)) * 100);
+
+  // Matn tahlil uchun
+  if (d.meta?.type === 'text') {
+    const malF = d.findings?.filter(f => f.status === 'bad').length || 0;
+    const warnF = d.findings?.filter(f => f.status === 'warn').length || 0;
+    navigator.clipboard.writeText([
+      '=== THREATSCAN PRO HISOBOT ===',
+      'Sana: ' + new Date(d.ts).toLocaleString(),
+      'Tur: MATN TAHLIL',
+      '',
+      'Xavfli element: ' + malF,
+      'Shubhali element: ' + warnF,
+      'Jami topildi: ' + (d.findings?.length || 0),
+      d.aiResult ? 'AI xulosa: ' + d.aiResult.xulosa : '',
+      malF > 0 ? 'NATIJA: XAVFLI' : warnF > 0 ? 'NATIJA: SHUBHALI' : 'NATIJA: XAVFSIZ',
+    ].filter(Boolean).join('\n')).then(() => toast('[OK] NUSXALANDI'));
+    return;
+  }
+
   navigator.clipboard.writeText([
     '=== THREATSCAN PRO HISOBOT ===',
-    'Sana: ' + new Date(window._data.ts).toLocaleString(),
-    'Maqsad: ' + window._data.meta.value,
-    'Tur: ' + window._data.meta.type.toUpperCase(),
+    'Sana: ' + new Date(d.ts).toLocaleString(),
+    'Maqsad: ' + d.meta?.value,
+    'Tur: ' + d.meta?.type?.toUpperCase(),
     '',
     'Xavfli: ' + mal + ' | Shubhali: ' + sus + ' | Jami: ' + total,
     'Xavf: ' + risk + '%',
@@ -169,31 +240,4 @@ function dlJSON() {
   a.download = 'threatscan-' + Date.now() + '.json';
   a.click();
   toast('[DL] JSON YUKLANDI');
-}
-
-function dlHTML() {
-  if (!window._data) return;
-  const s = window._data.attrs?.stats || {};
-  const mal = s.malicious || 0, sus = s.suspicious || 0;
-  const total = Object.values(s).reduce((a, b) => a + b, 0);
-  const risk = Math.round(((mal + sus * .5) / Math.max(total, 1)) * 100);
-  const color = mal > 0 ? '#ff2244' : sus > 0 ? '#ffcc00' : '#00ff88';
-  const engs = Object.entries(window._data.attrs?.results || {}).slice(0, 60);
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ThreatScan Report</title></head>
-<body style="background:#000305;color:#c8ffe0;font-family:monospace;padding:40px;max-width:820px;margin:auto">
-<h1 style="color:#00ff88;font-family:sans-serif;letter-spacing:3px;margin-bottom:4px">THREATSCAN PRO</h1>
-<p style="color:#2a4a3a;font-size:11px;margin-bottom:28px">${new Date(window._data.ts).toLocaleString()} · ${window._data.meta.value}</p>
-<div style="background:#050d1a;border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:22px;margin-bottom:22px">
-  <div style="font-size:28px;font-weight:700;color:${color};margin-bottom:8px">${mal > 0 ? 'XAVFLI' : sus > 0 ? 'SHUBHALI' : 'XAVFSIZ'} · ${risk}%</div>
-  <div style="color:#5a8a6a;font-size:13px">Xavfli: ${mal} · Shubhali: ${sus} · Xavfsiz: ${s.undetected || 0} · Jami: ${total}</div>
-</div>
-<table style="width:100%;border-collapse:collapse">
-<tr style="background:#071022"><th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">ENGINE</th><th style="padding:9px 12px;text-align:left;font-size:10px;color:#2a4a3a">NATIJA</th></tr>
-${engs.map(([e, r]) => `<tr style="border-bottom:1px solid #071022"><td style="padding:6px 12px;font-size:11px;color:#5a8a6a">${e}</td><td style="padding:6px 12px;font-size:11px;color:${r.category === 'malicious' ? '#ff2244' : r.category === 'suspicious' ? '#ffcc00' : '#2a4a3a'};font-weight:600">${r.result || r.category || '—'}</td></tr>`).join('')}
-</table></body></html>`;
-  const a = document.createElement('a');
-  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
-  a.download = 'threatscan-report-' + Date.now() + '.html';
-  a.click();
-  toast('[DL] HTML YUKLANDI');
 }
