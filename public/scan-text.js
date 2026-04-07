@@ -188,6 +188,7 @@ async function scanText(text) {
     }
   } catch (e) {
     console.warn('Gemini xatosi:', e.message);
+    aiResult = { _error: e.message };
   }
 
   stopTimer();
@@ -310,22 +311,25 @@ function renderText(text, findings, totalRisk, found, suspWords, aiResult) {
 
   // AI tahlil bloki
   if (aiResult) {
-    const aiColor = aiResult.xavf_darajasi === 'XAVFLI' ? 'var(--red)' :
-                    aiResult.xavf_darajasi === 'SHUBHALI' ? 'var(--yellow)' : 'var(--green)';
-    techHTML += `
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">// GEMINI AI TAHLIL</div>
+    techHTML += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">// GEMINI AI TAHLIL</div>`;
+    if (aiResult._error) {
+      techHTML += `<div style="font-size:11px;color:var(--red);margin-bottom:4px">Xato: ${aiResult._error}</div>
+        <div style="font-size:10px;color:var(--text3)">AI tahlil ishlamadi. GEMINI_API kalitini tekshiring.</div>`;
+    } else {
+      const aiColor = aiResult.xavf_darajasi === 'XAVFLI' ? 'var(--red)' :
+                      aiResult.xavf_darajasi === 'SHUBHALI' ? 'var(--yellow)' : 'var(--green)';
+      techHTML += `
         <div style="font-size:11px;color:${aiColor};font-weight:600;margin-bottom:6px">
-          ${aiResult.xavf_darajasi || '—'} · ${aiResult.matn_turi || '—'}
+          ${aiResult.xavf_darajasi || '—'} · ${aiResult.matn_turi || '—'} · ${aiResult.til || '—'}
         </div>
-        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
-          ${aiResult.xulosa || '—'}
-        </div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">${aiResult.xulosa || '—'}</div>
         ${aiResult.sabab?.length ? `<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Sabab:</div>
-        <div style="font-size:11px;color:var(--yellow)">${aiResult.sabab.join(' · ')}</div>` : ''}
-        ${aiResult.tavsiya ? `<div style="font-size:10px;color:var(--text3);margin-top:6px;margin-bottom:4px">Tavsiya:</div>
-        <div style="font-size:11px;color:var(--green)">${aiResult.tavsiya}</div>` : ''}
-      </div>`;
+        <div style="font-size:11px;color:var(--yellow);line-height:1.6">${aiResult.sabab.join(' · ')}</div>` : ''}
+        ${aiResult.tavsiya ? `<div style="font-size:10px;color:var(--text3);margin-top:8px;margin-bottom:4px">Tavsiya:</div>
+        <div style="font-size:11px;color:var(--green);line-height:1.6">${aiResult.tavsiya}</div>` : ''}`;
+    }
+    techHTML += `</div>`;
   }
 
   document.getElementById('techRows').innerHTML = techHTML;
