@@ -27,9 +27,9 @@ async function urlscanFetch(path, opts = {}) {
   return res.json();
 }
 
-// MalwareBazaar — API keysiz
+// MalwareBazaar — server proxy orqali
 async function mbFetch(hash) {
-  const res = await fetch('https://mb-api.abuse.ch/api/v1/', {
+  const res = await fetch('/api/mb', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'query=get_info&hash=' + hash
@@ -38,9 +38,9 @@ async function mbFetch(hash) {
   return res.json();
 }
 
-// URLhaus — API keysiz
+// URLhaus — server proxy orqali
 async function urlhausFetch(url) {
-  const res = await fetch('https://urlhaus-api.abuse.ch/v1/url/', {
+  const res = await fetch('/api/urlhaus', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'url=' + encodeURIComponent(url)
@@ -49,9 +49,9 @@ async function urlhausFetch(url) {
   return res.json();
 }
 
-// ThreatFox — API keysiz
+// ThreatFox — server proxy orqali
 async function threatfoxFetch(query) {
-  const res = await fetch('https://threatfox-api.abuse.ch/api/v1/', {
+  const res = await fetch('/api/threatfox', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: 'search_term', search_term: query })

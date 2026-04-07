@@ -81,7 +81,7 @@ function render(attrs, details, meta, extra = {}) {
   // Stats
   document.getElementById('sMal').textContent = mal;
   document.getElementById('sSus').textContent = sus;
-  document.getElementById('sClean').textContent = undet;
+  document.getElementById('sClean').textContent = (s.harmless || 0) + undet;
   document.getElementById('sTotal').textContent = total;
 
   // Verdict

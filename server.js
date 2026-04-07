@@ -167,6 +167,39 @@ Faqat JSON qaytар, hech qanday qo'shimcha matn yozma:
   }, geminiBodyBuf, res);
 });
 
+// ThreatFox proxy
+app.post('/api/threatfox', async (req, res) => {
+  const body = await readBody(req);
+  proxyReq({
+    hostname: 'threatfox-api.abuse.ch',
+    path: '/api/v1/',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  }, body, res);
+});
+
+// URLhaus proxy
+app.post('/api/urlhaus', async (req, res) => {
+  const body = await readBody(req);
+  proxyReq({
+    hostname: 'urlhaus-api.abuse.ch',
+    path: '/v1/url/',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  }, body, res);
+});
+
+// MalwareBazaar proxy
+app.post('/api/mb', async (req, res) => {
+  const body = await readBody(req);
+  proxyReq({
+    hostname: 'mb-api.abuse.ch',
+    path: '/api/v1/',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  }, body, res);
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
